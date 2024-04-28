@@ -14,23 +14,16 @@ def plot_decision_boundary(model, X, y):
     xx_, yy_ = xx.ravel(), yy.ravel()
     grid = np.c_[xx_, yy_]
     if hasattr(model, "predict_proba"):
-        probs = model.predict_proba(grid)
+        pred_func = model.predict_proba(grid, bool=False)[:,0]
     else:
         # check if torch model
         if hasattr(model, "forward"):
-            probs = model(torch.tensor(grid, dtype=torch.double)).detach().numpy()
+            pred_func = 1 - model(torch.tensor(grid, dtype=torch.double)).detach().numpy()
         else:
-            probs = model(grid).numpy()
-    
-    if probs.shape[1] == 1:
-        z = probs.reshape(xx.shape)
-        c = plt.contourf(xx, yy, z, cmap="RdYlGn")
-        plt.colorbar(c)
-    else:
-        predictions = np.argmax(probs, axis=1)
-        colors = list(mcolors.TABLEAU_COLORS.keys())
-        color_values = [colors[int(label)] for label in predictions]
-        plt.scatter(xx_, yy_, marker="x", c=color_values)
-
-    plt.scatter(X[:, 0], X[:, 1], marker="o", c=y, cmap="viridis")
-
+            pred_func = 1 - model(grid).numpy()
+    z = pred_func.reshape(xx.shape)
+    c = plt.contourf(xx, yy, z, cmap="RdYlGn")
+    plt.colorbar(c)
+    colors = list(mcolors.TABLEAU_COLORS.keys())
+    color_values = [colors[int(label)] for label in y]
+    plt.scatter(X[:, 0], X[:, 1], marker="x", c=color_values)
